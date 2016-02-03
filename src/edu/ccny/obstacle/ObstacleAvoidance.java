@@ -36,6 +36,7 @@ public class ObstacleAvoidance {
     private static final int Y = 1;
     private static final int Z = 2;
     public  Utils mUtils;
+    private float [] mObstaclePoint;
     
     private static final int mPointsNumMax = 30000;
     private static int mDataFloatLenMax = mPointsNumMax*3;
@@ -243,6 +244,10 @@ public class ObstacleAvoidance {
         }
     }
     
+    public float [] getObstacleCloestPoint () {
+    	return mObstaclePoint;
+    }
+    
     public int [] getObstaclePoints() {
         // get obstacle points [i1, j1, i2, j2, ...] in Image Frame from Global World Metric Frame Transformation
         return mDataPointsInt;
@@ -330,7 +335,8 @@ public class ObstacleAvoidance {
         mDataAllLen = mPointCloudProcess.downsampleByRange(
                 mDataAll, mDataAllLen, xMin, xMax, zMin, zMax, yMin, yMax);
         if (0 == mDataAllLen) {
-            return false;
+        	mObstaclePoint = null;
+        	return false;
         }
 
         mUtils.saveOneFrameData(mDataAll, mDataAllLen,
@@ -342,7 +348,7 @@ public class ObstacleAvoidance {
         // each point: x, y, z (height)
         float [] obstaclePoints = mMapLocal.getObstaclePoints();
         int dataPointsLen = obstaclePoints.length;
-
+        
         // local obstacle points process
         mDataPointsLocal = new float[dataPointsLen];
         System.arraycopy(obstaclePoints, 0, mDataPointsLocal, 0, dataPointsLen);
@@ -352,7 +358,9 @@ public class ObstacleAvoidance {
         		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
         mUtils.saveOneFrameData(mObstacleBoxesLocal, mObstacleBoxesLocal.length,
         		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");
+        
         float [] obs = mMapLocal.getCloestPoint();
+        
         if (null != obs) {
 	        mUtils.saveOneFrameData(obs, obs.length,
 	        		3, String.valueOf(mFramesCnt) + "_obs.txt");
@@ -373,11 +381,15 @@ public class ObstacleAvoidance {
 	        mUtils.saveOneFrameData(obsY, obsY.length,
 	        		2, String.valueOf(mFramesCnt) + "_obsY.txt");
         }
-        float [] obstacle = new float[3];
-        obstacle [0] = obs[0];  // x
-        obstacle [1] = obs[1];  // y
-        obstacle [2] = obsY[1]; // z: height
-        obstacle [3] = obs[2];  // angle (left -> right: 0 -> 180)
+        mObstaclePoint = new float[4];
+        mObstaclePoint [0] = obs[0];  // x
+        mObstaclePoint [1] = obs[1];  // y
+        if (null != obsY) {		      // z: height
+        	mObstaclePoint [2] = obsY[1]; 
+        } else {
+        	mObstaclePoint [2] = -2f;
+        }
+        mObstaclePoint [3] = obs[2];  // angle (left -> right: 0 -> 180)
 
         int obstacleBoxNum = 0;
         if (false == isGlobalLocalized) {
