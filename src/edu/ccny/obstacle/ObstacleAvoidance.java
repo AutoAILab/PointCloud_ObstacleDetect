@@ -79,6 +79,7 @@ public class ObstacleAvoidance {
 		final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
 		final String mDir = "obstacleTango";
 		// pointCloud3D_20160202_2007_data_moving2person
+		// pointCloud3D_20160202_2008_data_moving2person
 		// pointCloud3D_20160202_2009_data_moving2person_slow
 		// pointCloud3D_20160202_2010_data_movingBoth
 		final String mPointCloudDir = "pointCloud3D_20160202_2009_data_moving2person_slow";
