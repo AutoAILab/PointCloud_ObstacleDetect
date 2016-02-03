@@ -26,14 +26,11 @@ import javax.imageio.ImageIO;
 public class Utils {
 	// LOG.setLevel(Level.WARNING), LOG.severe/warning/info/finest
     private static Logger LOG = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    
-	/*final static String mDir = "DCIM";
-	final static String mPointCloudDir = "pointCloud3D";*/
-    
+
     final static String pathSeparator = "/";
-	final static String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
-	final static String mDir = "obstacleTango";
-	final static String mPointCloudDir = "pointCloud3D_20160202_2010_data_movingBoth";
+	private String topPath = "";
+	private String mDir = "";
+	private String mPointCloudDir = "";
 	
     /*
     12_quaternion.txt
@@ -44,21 +41,24 @@ public class Utils {
 	model.txt
 	obstacleWall.txt
 	range.txt
-     * */
+    */
 
-    private static File createDataDir() {
-    	File file;
-    	
+	public Utils (String topPath, String mDir, String mPointCloudDir) {
+		this.topPath = topPath;
+		this.mDir = mDir;
+		this.mPointCloudDir = mPointCloudDir;
     	LOG.setLevel(Level.WARNING);
-    
-    	file = new File(topPath, mDir);
-    	// file = new File(Environment.getExternalStorageDirectory(), mDir);
+	}
+	
+    private File createDataDir() {
+    	File file;
 
+    	file = new File(topPath, mDir);
         file = new File(file, mPointCloudDir);
         return file;
     }
     
-    public static byte[][] getMapImage(String mapName) {
+    public byte[][] getMapImage(String mapName) {
     	BufferedImage img = null;
     	
     	File file = new File(topPath, mDir);
@@ -98,7 +98,7 @@ public class Utils {
         return buffer;
     }
     
-    public static float [] getTransform() {
+    public float [] getTransform() {
     	File file = createDataDir();
     	
     	String line;
@@ -125,7 +125,7 @@ public class Utils {
         }
     }
     
-    public static float [] getQuaternion(int id) {
+    public float [] getQuaternion(int id) {
     	File file = createDataDir();
     	
     	String line;
@@ -147,12 +147,12 @@ public class Utils {
 	        
 	        return array;
 		} catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
 	        return null;
         }
     }
     
-    public static float [] getTranslation(int id) {
+    public float [] getTranslation(int id) {
     	File file = createDataDir();
     	
     	String line;
@@ -179,7 +179,7 @@ public class Utils {
         }
     }
     
-    public static FloatBuffer getRawPC(int id) {
+    public FloatBuffer getRawPC(int id) {
     	File file = createDataDir();
     	final int FLOAT_SIZE = 4;
     	
@@ -220,7 +220,7 @@ public class Utils {
     
     // file  =  new File(Environment.getExternalStorageDirectory(), mDir);
     // file = new File(\", mDir);
-    public static void removeFramesData() {
+    public void removeFramesData() {
         File file = null;
         try {
             file = createDataDir();
@@ -232,11 +232,11 @@ public class Utils {
         }
     }
 
-    public static void saveOneFrameData(float [] dataAll, String fileName) {
-        saveOneFrameData(dataAll, dataAll.length, fileName);
+    public void saveOneFrameData(float [] dataAll, int dim, String fileName) {
+        saveOneFrameData(dataAll, dataAll.length, dim, fileName);
     }
 
-    public static void saveStr2File(String str, String fileName) {
+    public void saveStr2File(String str, String fileName) {
         File file = null;
         try {
         	file = createDataDir();
@@ -263,7 +263,7 @@ public class Utils {
         }
     }
 
-    public static void saveOneFrameData(float [] dataAll, int dataAllLen, String fileName) {
+    public void saveOneFrameData(float [] dataAll, int dataAllLen, int dim, String fileName) {
         File file = null;
         try {
         	file = createDataDir();
@@ -281,17 +281,22 @@ public class Utils {
             FileOutputStream fOut = new FileOutputStream(myFile);
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
 
-            if (dataAllLen % 3 != 0) {
-            	LOG.warning("dataAllLen % 3 != 0");
+            if (dataAllLen % dim != 0) {
+            	String info = String.format("dataAllLen % %d != 0", dim);
+            	LOG.warning(info);
             }
-            dataAllLen = 3 * (dataAllLen/3);
-            for (int i = 0; i < dataAllLen; i += 3) {
-                float x = dataAll[i + 0];
+            dataAllLen = dim * (dataAllLen/dim);
+            for (int i = 0; i < dataAllLen; i += dim) {
+            	float x = dataAll[i + 0];
                 float y = dataAll[i + 1];
-                float z = dataAll[i + 2];
                 myOutWriter.append(String.valueOf(x) + " ");
-                myOutWriter.append(String.valueOf(y) + " ");
-                myOutWriter.append(String.valueOf(z) + "\n");
+            	if (2 == dim) {
+                    myOutWriter.append(String.valueOf(y) + "\n");
+            	} else if (3 == dim) {
+                    float z = dataAll[i + 2];
+                    myOutWriter.append(String.valueOf(y) + " ");
+                    myOutWriter.append(String.valueOf(z) + "\n");
+            	}
             }
             myOutWriter.close();
             fOut.close();
@@ -300,11 +305,11 @@ public class Utils {
         }
     }
 
-    public static void saveOneFrameData(int [] dataAll, String fileName) {
-        saveOneFrameData(dataAll, dataAll.length, fileName);
+    public void saveOneFrameData(int [] dataAll, int dim, String fileName) {
+        saveOneFrameData(dataAll, dataAll.length, dim, fileName);
     }
 
-    public static void saveOneFrameData(int [] dataAll, int dataAllLen, String fileName) {
+    public void saveOneFrameData(int [] dataAll, int dataAllLen, int dim, String fileName) {
         File file = null;
         try {
         	file = createDataDir();
@@ -322,17 +327,22 @@ public class Utils {
             FileOutputStream fOut = new FileOutputStream(myFile);
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
 
-            if (dataAllLen % 3 != 0) {
-                LOG.warning("dataAllLen % 3 != 0");
+            if (dataAllLen % dim != 0) {
+            	String info = String.format("dataAllLen % %d != 0", dim);
+            	LOG.warning(info);
             }
-            dataAllLen = 3 * (dataAllLen/3);
-            for (int i = 0; i < dataAllLen; i += 3) {
-                int x = dataAll[i + 0];
-                int y = dataAll[i + 1];
-                int z = dataAll[i + 2];
+            dataAllLen = dim * (dataAllLen/dim);
+            for (int i = 0; i < dataAllLen; i += dim) {
+            	int x = dataAll[i + 0];
+            	int y = dataAll[i + 1];
                 myOutWriter.append(String.valueOf(x) + " ");
-                myOutWriter.append(String.valueOf(y) + " ");
-                myOutWriter.append(String.valueOf(z) + "\n");
+            	if (2 == dim) {
+                    myOutWriter.append(String.valueOf(y) + "\n");
+            	} else if (3 == dim) {
+            		int z = dataAll[i + 2];
+                    myOutWriter.append(String.valueOf(y) + " ");
+                    myOutWriter.append(String.valueOf(z) + "\n");
+            	}
             }
             myOutWriter.close();
             fOut.close();
@@ -341,7 +351,7 @@ public class Utils {
         }
     }
 
-    public static void saveOneFrameData(FloatBuffer dataAll, String fileName) {
+    public void saveOneFrameData(FloatBuffer dataAll, String fileName) {
         File file = null;
         try {
         	file = createDataDir();

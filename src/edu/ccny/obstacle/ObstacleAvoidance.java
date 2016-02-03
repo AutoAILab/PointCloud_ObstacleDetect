@@ -12,6 +12,7 @@ public class ObstacleAvoidance {
     private boolean   isGlobalLocalized = true;
     private float []  mDataPointsLocal = null;
     private float []  mObstacleBoxesLocal = null;
+    private float []  mObstacleBoxesLocalVertical = null;
     private final int mPointsMinimum = 4;
     private boolean   obstacleDetectFlag = true;
     private boolean   postponeObstacleDetectFlag = false;
@@ -30,7 +31,12 @@ public class ObstacleAvoidance {
     private float zMax =  0.5f;
     private MapUpdaterGlobal mMapGlobal = null;
     private MapUpdaterLocal  mMapLocal  = null;
-
+    private MapUpdaterLocal  mMapLocalVertical = null;
+    private static final int X = 0;
+    private static final int Y = 1;
+    private static final int Z = 2;
+    public  Utils mUtils;
+    
     private static final int mPointsNumMax = 30000;
     private static int mDataFloatLenMax = mPointsNumMax*3;
 
@@ -68,6 +74,16 @@ public class ObstacleAvoidance {
                 LOG.warning("ObstacleAvoidance() invalid range, use default");
             }
         }
+    	
+    	// final String topPath = Environment.getExternalStorageDirectory();
+		final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
+		final String mDir = "obstacleTango";
+		// pointCloud3D_20160202_2007_data_moving2person
+		// pointCloud3D_20160202_2009_data_moving2person_slow
+		// pointCloud3D_20160202_2010_data_movingBoth
+		final String mPointCloudDir = "pointCloud3D_20160202_2009_data_moving2person_slow";
+	    mUtils = new Utils(topPath, mDir, mPointCloudDir);
+	    
         init(map, transform, obstacleWall, localGranularityMeter);
     }
 
@@ -100,7 +116,8 @@ public class ObstacleAvoidance {
 
         mMap = map;
         mMapGlobal = new MapUpdaterGlobal(map, obstacleWall);
-        mMapLocal  = new MapUpdaterLocal(xMin, xMax, yMin, yMax, zMin, zMax, localGranularityMeter);
+        mMapLocal  = new MapUpdaterLocal(xMin, xMax, yMin, yMax, zMin, zMax, localGranularityMeter, Z);
+        mMapLocalVertical = new MapUpdaterLocal(xMin, xMax, yMin, yMax, zMin, zMax, localGranularityMeter, Y);
     }
 
     public boolean updatingData(FloatBuffer buffer, float [] translation, float [] quaternion, double timeStamp) {
@@ -270,9 +287,11 @@ public class ObstacleAvoidance {
 
         /*mFramesCnt += 1;
         if (mFramesCnt == 1) {
-            Utils.removeFramesData();
+            mUtils.removeFramesData();
         }*/
         mFramesCnt = id;
+        
+        // mUtils.saveOneFrameData(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_raw.txt");
 
         float [] eulerAngle = MyQuaternion.getEulerAngle(mQuaternion);
         // When the device vertical, roll is 90 degree
@@ -282,7 +301,8 @@ public class ObstacleAvoidance {
         // vise versa for looks up.
         double angleDegree = eulerAngle[0] - 90 + 14.5;
         double [][] rotaMatrixRoll = MyQuaternion.getRotationMatrixByRoll(angleDegree);
-        Utils.saveStr2File(String.valueOf(angleDegree), String.valueOf(mFramesCnt) + "_roll.txt");
+        mUtils.saveStr2File(String.valueOf(eulerAngle[0]), String.valueOf(mFramesCnt) + "_rollRaw.txt");
+        mUtils.saveStr2File(String.valueOf(angleDegree), String.valueOf(mFramesCnt) + "_roll.txt");
 
         // The device might has pitch angle
         double [][] rotaMatrixPitch = MyQuaternion.getRotationMatrixByPitch(eulerAngle[1]);
@@ -292,49 +312,67 @@ public class ObstacleAvoidance {
         // world frame:     x: go-right, y: go-forward, z: go-up
         mDataAllLen = mPointCloudProcess.rotationRollPitchCorrect(mDataAll, mPointCloudBuffer,
                 rotaMatrixRoll, rotaMatrixPitch);
+        if (0 == mDataAllLen) {
+            return false;
+        }
+        
         /*// Deprecated
         double [][] rotaMatrix = MyQuaternion.getRotationMatrixByRoll(angleDegree);
         mDataAllLen = mPointCloudProcess.rotationRollCorrect(mDataAll, mPointCloudBuffer, rotaMatrix); */
 
-        if (0 == mDataAllLen) {
-            return false;
-        }
-
         /*info = String.format("euler[0]: %.1f, [1]: %.1f, angle: %.1f, len = %d",
                 eulerAngle[0], eulerAngle[1], angleDegree, mDataAllLen);
-        Log.e(TAG, info);
-
-        Utils.saveValue(eulerAngle[0], String.valueOf(mFramesCnt) + "_roll.txt");
-        Utils.saveValue((float) angleDegree, String.valueOf(mFramesCnt) + "_rollCorrect.txt");
-        Utils.saveOneFrameData(mDataAll, mDataAllLen, String.valueOf(mFramesCnt) + "_world.txt");*/
-        Utils.saveOneFrameData(mDataAll, mDataAllLen, String.valueOf(mFramesCnt) + "_world.txt");
+        Log.e(TAG, info); */
+        mUtils.saveOneFrameData(mDataAll, mDataAllLen,
+        		3, String.valueOf(mFramesCnt) + "_world.txt");
         
         mDataAllLen = mPointCloudProcess.downsampleByRange(
-                mDataAll, mDataAllLen, xMin, xMax,
-                zMin, zMax, yMin, yMax);
+                mDataAll, mDataAllLen, xMin, xMax, zMin, zMax, yMin, yMax);
         if (0 == mDataAllLen) {
             return false;
         }
 
-        Utils.saveOneFrameData(mDataAll, mDataAllLen, String.valueOf(mFramesCnt) + "_range.txt");
+        mUtils.saveOneFrameData(mDataAll, mDataAllLen,
+        		3, String.valueOf(mFramesCnt) + "_range.txt");
 
+        // Projection to z, project to floor plane
         // use the Array with len, so don't need to re-allocate the array
         mMapLocal.updating(mDataAll, mDataAllLen);
         // each point: x, y, z (height)
         float [] obstaclePoints = mMapLocal.getObstaclePoints();
         int dataPointsLen = obstaclePoints.length;
 
-        Utils.saveOneFrameData(obstaclePoints, dataPointsLen, String.valueOf(mFramesCnt) + "_obs.txt");
-
-        /*if (mFramesCnt >= 0) {
-            return false;
-        }*/
-
         // local obstacle points process
         mDataPointsLocal = new float[dataPointsLen];
         System.arraycopy(obstaclePoints, 0, mDataPointsLocal, 0, dataPointsLen);
         mObstacleBoxesLocal = mMapLocal.getObstacleBoxes();
 
+        mUtils.saveOneFrameData(obstaclePoints, obstaclePoints.length,
+        		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
+        mUtils.saveOneFrameData(mObstacleBoxesLocal, mObstacleBoxesLocal.length,
+        		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");
+        float [] obs = mMapLocal.getCloestPoint();
+        if (null != obs) {
+        mUtils.saveOneFrameData(obs, obs.length,
+        		3, String.valueOf(mFramesCnt) + "_obs.txt");
+        }
+        
+        // Projection to y, like: get in front vertical plane
+        mMapLocalVertical.updating(mDataAll, mDataAllLen);
+        float [] pV = mMapLocalVertical.getObstaclePoints();
+        float [] mDataPointsLocalVertical = new float[pV.length];
+        System.arraycopy(pV, 0, mDataPointsLocalVertical, 0, pV.length);
+        mObstacleBoxesLocalVertical = mMapLocalVertical.getObstacleBoxes();
+        
+        mUtils.saveOneFrameData(pV, pV.length, 2, String.valueOf(mFramesCnt) + "_prjY.txt");
+        mUtils.saveOneFrameData(mObstacleBoxesLocalVertical, mObstacleBoxesLocalVertical.length,
+        		2, String.valueOf(mFramesCnt) + "_prjYObj.txt");
+        float [] obsY = mMapLocalVertical.getPointByXExtra(obs[0]);
+        if (null != obsY) {
+        mUtils.saveOneFrameData(obsY, obsY.length,
+        		2, String.valueOf(mFramesCnt) + "_obsY.txt");
+        }
+        
         int obstacleBoxNum = 0;
         if (false == isGlobalLocalized) {
             // get region boxes (2 corner points) of these points in local 2d metric
@@ -359,6 +397,12 @@ public class ObstacleAvoidance {
             // global metric -> global byte grid
             obstaclePoints = globalMetric2Pixel(obstaclePoints, dataPointsLen);
             mDataPointsInt = mMapGlobal.getObstaclePoints(obstaclePoints, dataPointsLen);
+            
+            /*mUtils.saveOneFrameData(obstaclePoints, obstaclePoints.length,
+            		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
+            mUtils.saveOneFrameData(mObstacleBoxesInt, mObstacleBoxesInt.length,
+            		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");*/
+            
             if (null != mDataPointsInt) {
                 if (mDataPointsInt.length > mPointsMinimum) {
                     findObstacle = true;

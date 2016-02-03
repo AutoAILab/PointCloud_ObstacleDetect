@@ -66,8 +66,8 @@ public class MapUpdaterGlobal {
             objectGrids[c] = (int) points[c];
         }
 
-        mObstacles = objectGrids;
-        // mObstacles = disregardPointsInWalls(objectGrids);
+        // mObstacles = objectGrids;
+        mObstacles = disregardPointsInWalls(objectGrids);
         return mObstacles;
     }
 
