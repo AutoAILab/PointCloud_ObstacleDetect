@@ -354,8 +354,8 @@ public class ObstacleAvoidance {
         		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");
         float [] obs = mMapLocal.getCloestPoint();
         if (null != obs) {
-        mUtils.saveOneFrameData(obs, obs.length,
-        		3, String.valueOf(mFramesCnt) + "_obs.txt");
+	        mUtils.saveOneFrameData(obs, obs.length,
+	        		3, String.valueOf(mFramesCnt) + "_obs.txt");
         }
         
         // Projection to y, like: get in front vertical plane
@@ -370,10 +370,15 @@ public class ObstacleAvoidance {
         		2, String.valueOf(mFramesCnt) + "_prjYObj.txt");
         float [] obsY = mMapLocalVertical.getPointByXExtra(obs[0]);
         if (null != obsY) {
-        mUtils.saveOneFrameData(obsY, obsY.length,
-        		2, String.valueOf(mFramesCnt) + "_obsY.txt");
+	        mUtils.saveOneFrameData(obsY, obsY.length,
+	        		2, String.valueOf(mFramesCnt) + "_obsY.txt");
         }
-        
+        float [] obstacle = new float[3];
+        obstacle [0] = obs[0];  // x
+        obstacle [1] = obs[1];  // y
+        obstacle [2] = obsY[1]; // z: height
+        obstacle [3] = obs[2];  // angle (left -> right: 0 -> 180)
+
         int obstacleBoxNum = 0;
         if (false == isGlobalLocalized) {
             // get region boxes (2 corner points) of these points in local 2d metric
