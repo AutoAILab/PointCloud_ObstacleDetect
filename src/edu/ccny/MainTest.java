@@ -23,14 +23,15 @@ public class MainTest {
 		final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
 		final String mDir = "obstacleTango";
 		// pointCloud3D_20160202_2007_data_moving2person
-		// pointCloud3D_20160202_2008_data_moving2person
+		//    1:10 works fine {-2, 2, 0, 3, -0.8f, 0.8f}
+		//    3:10 works fine {-1, 1, 0, 2, -0.8f, 0.5f}, {-0.8f, 0.8f, 0, 2, -0.8f, 0.5f}
 		// pointCloud3D_20160202_2009_data_moving2person_slow
 		// pointCloud3D_20160202_2010_data_movingBoth
-		final String mPointCloudDir = "pointCloud3D_20160202_2009_data_moving2person_slow";
+		final String mPointCloudDir = "pointCloud3D_20160202_2007_data_moving2person";
 	    Utils mUtils = new Utils(topPath, mDir, mPointCloudDir);
-	    	    
+
 		byte [][] buffer = mUtils.getMapImage("st6b_grid.png");
-		float [] obstacleRange = new float[]{-2, 2, 0, 3, -0.8f, 0.8f};
+		float [] obstacleRange = new float[]{-0.8f, 0.8f, 0, 2, -0.8f, 0.5f};
 		float [] mat = mUtils.getTransform();
 		
 	    ObstacleAvoidance mObstacleAvoidances = null;
