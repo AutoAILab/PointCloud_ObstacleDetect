@@ -318,6 +318,7 @@ public class ObstacleAvoidance {
         mDataAllLen = mPointCloudProcess.rotationRollPitchCorrect(mDataAll, mPointCloudBuffer,
                 rotaMatrixRoll, rotaMatrixPitch);
         if (0 == mDataAllLen) {
+        	mObstaclePoint = null;
             return false;
         }
         
