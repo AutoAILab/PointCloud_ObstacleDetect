@@ -126,6 +126,64 @@ public class MapUpdaterLocal {
         return boxesMetric;
     }
     
+    private float [] getPolar (float p[], float jMin) {
+    	float [] pPolar = new float[2];
+    	
+    	float jOffset = jMin - 1.0f;
+    	p[1] -= jOffset;
+    	double degree = Math.atan2((p[1]), p[0]) * 180 / Math.PI;
+    	if (degree < 0) {
+    		degree += 180;
+    	}
+    	double dis = Math.sqrt(p[0]*p[0]+p[1]*p[1]);
+    	
+    	pPolar[0] = (float)degree;
+    	pPolar[1] = (float)dis;
+    	return pPolar;
+    }
+    
+    public float [] getObstaclePolarHis() {
+    	final int WIDTH = 121;
+    	float [] obstacleFront = new float [WIDTH];
+    	
+    	for (int i = 0; i < WIDTH; i++) {
+    		obstacleFront[i] = 0;
+    	}
+    	
+    	float jMin = 1000;
+    	for (int i = 0; i < iSize; i++)
+            for (int j = 0; j < jSize; j++) {
+                if (OCCUPIED == mMap[j][i]) {
+                	float p[] = getGridLocalMetric(i, j);
+                	if (p[1] < jMin) {
+                		jMin = p[1];
+                	}
+                }
+            }
+    	
+    	for (int i = 0; i < iSize; i++)
+            for (int j = 0; j < jSize; j++) {
+                if (OCCUPIED == mMap[j][i]) {
+                	float p[] = getGridLocalMetric(i, j);
+                	
+                	float pPolar[] = getPolar(p, jMin);
+                	
+                	int thetaIndex = (int)(pPolar[0] - 30);
+                	if (thetaIndex < 0 || thetaIndex > 120) {
+                		continue;
+                	}
+                	// the far, the smaller;
+                	float dis = pPolar[1];
+                	if (dis < 0.5f) {
+                		dis = 0.5f;
+                	}
+                	obstacleFront[thetaIndex] += 1/(pPolar[1]*pPolar[1]*pPolar[1]);
+                }
+            }
+    	
+    	return obstacleFront;
+    }
+    
     public float [] getObstaclePoints() {
         int cnt = 0;
         int dim = 2;

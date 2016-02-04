@@ -31,7 +31,7 @@ public class MainTest {
 	    Utils mUtils = new Utils(topPath, mDir, mPointCloudDir);
 
 		byte [][] buffer = mUtils.getMapImage("st6b_grid.png");
-		float [] obstacleRange = new float[]{-0.8f, 0.8f, 0, 2, -0.8f, 0.5f};
+		float [] obstacleRange = new float[]{-2, 2, 0, 3, -0.8f, 0.8f};
 		float [] mat = mUtils.getTransform();
 		
 	    ObstacleAvoidance mObstacleAvoidances = null;

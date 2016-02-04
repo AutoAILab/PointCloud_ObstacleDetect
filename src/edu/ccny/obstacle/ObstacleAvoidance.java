@@ -296,7 +296,7 @@ public class ObstacleAvoidance {
         }*/
         mFramesCnt = id;
         
-        // mUtils.saveOneFrameData(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_raw.txt");
+        // mUtils.saveArray2File(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_raw.txt");
 
         float [] eulerAngle = MyQuaternion.getEulerAngle(mQuaternion);
         // When the device vertical, roll is 90 degree
@@ -329,7 +329,7 @@ public class ObstacleAvoidance {
         /*info = String.format("euler[0]: %.1f, [1]: %.1f, angle: %.1f, len = %d",
                 eulerAngle[0], eulerAngle[1], angleDegree, mDataAllLen);
         Log.e(TAG, info); */
-        mUtils.saveOneFrameData(mDataAll, mDataAllLen,
+        mUtils.saveArray2File(mDataAll, mDataAllLen,
         		3, String.valueOf(mFramesCnt) + "_world.txt");
         
         mDataAllLen = mPointCloudProcess.downsampleByRange(
@@ -339,7 +339,7 @@ public class ObstacleAvoidance {
         	return false;
         }
 
-        mUtils.saveOneFrameData(mDataAll, mDataAllLen,
+        mUtils.saveArray2File(mDataAll, mDataAllLen,
         		3, String.valueOf(mFramesCnt) + "_range.txt");
 
         // Projection to z, project to floor plane
@@ -349,20 +349,23 @@ public class ObstacleAvoidance {
         float [] obstaclePoints = mMapLocal.getObstaclePoints();
         int dataPointsLen = obstaclePoints.length;
         
+        float [] obstaclePolarHis = mMapLocal.getObstaclePolarHis();
+
         // local obstacle points process
         mDataPointsLocal = new float[dataPointsLen];
         System.arraycopy(obstaclePoints, 0, mDataPointsLocal, 0, dataPointsLen);
         mObstacleBoxesLocal = mMapLocal.getObstacleBoxes();
 
-        mUtils.saveOneFrameData(obstaclePoints, obstaclePoints.length,
+        mUtils.saveArray2File(obstaclePoints, obstaclePoints.length,
         		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
-        mUtils.saveOneFrameData(mObstacleBoxesLocal, mObstacleBoxesLocal.length,
+        mUtils.saveArray2File(mObstacleBoxesLocal, mObstacleBoxesLocal.length,
         		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");
+        mUtils.saveArray2File(obstaclePolarHis, String.valueOf(mFramesCnt) + "_prjZHis.txt");
         
         float [] obs = mMapLocal.getCloestPoint();
         
         if (null != obs) {
-	        mUtils.saveOneFrameData(obs, obs.length,
+	        mUtils.saveArray2File(obs, obs.length,
 	        		3, String.valueOf(mFramesCnt) + "_obs.txt");
         }
         
@@ -373,12 +376,16 @@ public class ObstacleAvoidance {
         System.arraycopy(pV, 0, mDataPointsLocalVertical, 0, pV.length);
         mObstacleBoxesLocalVertical = mMapLocalVertical.getObstacleBoxes();
         
-        mUtils.saveOneFrameData(pV, pV.length, 2, String.valueOf(mFramesCnt) + "_prjY.txt");
-        mUtils.saveOneFrameData(mObstacleBoxesLocalVertical, mObstacleBoxesLocalVertical.length,
+        float [] obstaclePolarHisVertical = mMapLocalVertical.getObstaclePolarHis();
+
+        mUtils.saveArray2File(pV, pV.length, 2, String.valueOf(mFramesCnt) + "_prjY.txt");
+        mUtils.saveArray2File(mObstacleBoxesLocalVertical, mObstacleBoxesLocalVertical.length,
         		2, String.valueOf(mFramesCnt) + "_prjYObj.txt");
+        mUtils.saveArray2File(obstaclePolarHisVertical, String.valueOf(mFramesCnt) + "_prjYHis.txt");
+        
         float [] obsY = mMapLocalVertical.getPointByXExtra(obs[0]);
         if (null != obsY) {
-	        mUtils.saveOneFrameData(obsY, obsY.length,
+	        mUtils.saveArray2File(obsY, obsY.length,
 	        		2, String.valueOf(mFramesCnt) + "_obsY.txt");
         }
         mObstaclePoint = new float[4];
@@ -416,9 +423,9 @@ public class ObstacleAvoidance {
             obstaclePoints = globalMetric2Pixel(obstaclePoints, dataPointsLen);
             mDataPointsInt = mMapGlobal.getObstaclePoints(obstaclePoints, dataPointsLen);
             
-            /*mUtils.saveOneFrameData(obstaclePoints, obstaclePoints.length,
+            /*mUtils.saveArray2File(obstaclePoints, obstaclePoints.length,
             		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
-            mUtils.saveOneFrameData(mObstacleBoxesInt, mObstacleBoxesInt.length,
+            mUtils.saveArray2File(mObstacleBoxesInt, mObstacleBoxesInt.length,
             		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");*/
             
             if (null != mDataPointsInt) {

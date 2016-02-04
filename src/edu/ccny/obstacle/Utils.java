@@ -232,10 +232,6 @@ public class Utils {
         }
     }
 
-    public void saveOneFrameData(float [] dataAll, int dim, String fileName) {
-        saveOneFrameData(dataAll, dataAll.length, dim, fileName);
-    }
-
     public void saveStr2File(String str, String fileName) {
         File file = null;
         try {
@@ -263,7 +259,11 @@ public class Utils {
         }
     }
 
-    public void saveOneFrameData(float [] dataAll, int dataAllLen, int dim, String fileName) {
+    public void saveArray2File(float [] dataAll, String fileName) {
+    	saveArray2File(dataAll, dataAll.length, 1, fileName);
+    }
+    
+    public void saveArray2File(float [] dataAll, int dataAllLen, int dim, String fileName) {
         File file = null;
         try {
         	file = createDataDir();
@@ -282,18 +282,24 @@ public class Utils {
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
 
             if (dataAllLen % dim != 0) {
-            	String info = String.format("dataAllLen % %d != 0", dim);
+            	String info = String.format("dataAllLen is not times of %d", dim);
             	LOG.warning(info);
             }
             dataAllLen = dim * (dataAllLen/dim);
             for (int i = 0; i < dataAllLen; i += dim) {
-            	float x = dataAll[i + 0];
-                float y = dataAll[i + 1];
-                myOutWriter.append(String.valueOf(x) + " ");
-            	if (2 == dim) {
+            	if (1 == dim) {
+            		float x = dataAll[i + 0];
+            		myOutWriter.append(String.valueOf(x) + "\n");
+            	} else if (2 == dim) {
+            		float x = dataAll[i + 0];
+            		float y = dataAll[i + 1];
+            		myOutWriter.append(String.valueOf(x) + " ");
                     myOutWriter.append(String.valueOf(y) + "\n");
             	} else if (3 == dim) {
+            		float x = dataAll[i + 0];
+            		float y = dataAll[i + 1];
                     float z = dataAll[i + 2];
+                    myOutWriter.append(String.valueOf(x) + " ");
                     myOutWriter.append(String.valueOf(y) + " ");
                     myOutWriter.append(String.valueOf(z) + "\n");
             	}
@@ -305,11 +311,11 @@ public class Utils {
         }
     }
 
-    public void saveOneFrameData(int [] dataAll, int dim, String fileName) {
-        saveOneFrameData(dataAll, dataAll.length, dim, fileName);
+    public void saveArray2File(int [] dataAll, String fileName) {
+    	saveArray2File(dataAll, dataAll.length, 1, fileName);
     }
-
-    public void saveOneFrameData(int [] dataAll, int dataAllLen, int dim, String fileName) {
+    
+    public void saveArray2File(int [] dataAll, int dataAllLen, int dim, String fileName) {
         File file = null;
         try {
         	file = createDataDir();
@@ -351,7 +357,7 @@ public class Utils {
         }
     }
 
-    public void saveOneFrameData(FloatBuffer dataAll, String fileName) {
+    public void saveArray2File(FloatBuffer dataAll, String fileName) {
         File file = null;
         try {
         	file = createDataDir();
