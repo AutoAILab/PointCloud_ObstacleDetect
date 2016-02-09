@@ -1,12 +1,13 @@
 package edu.ccny.obstacle;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MapUpdaterLocal {
     // TODO: figure out the best threshold
-    private final byte mThresholdCnt = 2;
+    private final byte mThresholdCnt = 4;
 
     private static final int X = 0;
     private static final int Y = 1;
@@ -126,6 +127,95 @@ public class MapUpdaterLocal {
         return boxesMetric;
     }
     
+    private float [] getPolar (float p[], float jMin) {
+    	float [] pPolar = new float[2];
+    	
+    	float jOffset = jMin - 1.0f;
+    	p[1] -= jOffset;
+    	double degree = Math.atan2((p[1]), p[0]) * 180 / Math.PI;
+    	if (degree < 0) {
+    		degree += 180;
+    	}
+    	double dis = Math.sqrt(p[0]*p[0]+p[1]*p[1]);
+    	
+    	pPolar[0] = (float)degree;
+    	pPolar[1] = (float)dis;
+    	return pPolar;
+    }
+    
+    public float [] getObstaclePolarHis() {
+    	final int WIDTH = 121;
+    	float [] obstacleFront = new float [WIDTH];
+    	
+    	for (int i = 0; i < WIDTH; i++) {
+    		obstacleFront[i] = 0;
+    	}
+    	
+    	float jMin = 1000;
+    	for (int i = 0; i < iSize; i++)
+            for (int j = 0; j < jSize; j++) {
+                if (OCCUPIED == mMap[j][i]) {
+                	float p[] = getGridLocalMetric(i, j);
+                	if (p[1] < jMin) {
+                		jMin = p[1];
+                	}
+                }
+            }
+    	
+    	for (int i = 0; i < iSize; i++)
+            for (int j = 0; j < jSize; j++) {
+                if (OCCUPIED == mMap[j][i]) {
+                	float p[] = getGridLocalMetric(i, j);
+                	
+                	float pPolar[] = getPolar(p, jMin);
+                	
+                	int thetaIndex = (int)(pPolar[0] - 30);
+                	if (thetaIndex < 0 || thetaIndex > 120) {
+                		continue;
+                	}
+                	// the far, the smaller;
+                	float dis = pPolar[1];
+                	if (dis < 0.5f) {
+                		dis = 0.5f;
+                	}
+                	obstacleFront[thetaIndex] += 1/(pPolar[1]*pPolar[1]*pPolar[1]);
+                }
+            }
+    	
+    	return obstacleFront;
+    }
+
+    public float [] getObstaclePointsPolarFilter(float [] points) {
+        ArrayList<Float> pointsList = new ArrayList<Float>();
+
+        int len = points.length;
+        if (0 == len || 0 != len % 2) {
+            return null;
+        }
+
+        for (int i = 0; i < len; i+=2) {
+            float p0 = points[i + 0];
+            float p1 = points[i + 1];
+
+            double degree = Math.atan2(p1, p0) * 180 / Math.PI;
+            if (degree < 0) {
+                degree += 180;
+            }
+            if (degree >= 70 && degree <= 130) {
+                pointsList.add(p0);
+                pointsList.add(p1);
+            }
+        }
+
+        len = pointsList.size();
+        float [] pointsFilter = new float[len];
+        for (int i = 0; i < len; i++) {
+            pointsFilter[i] = pointsList.get(i);
+        }
+
+        return pointsFilter;
+    }
+
     public float [] getObstaclePoints() {
         int cnt = 0;
         int dim = 2;
@@ -254,8 +344,46 @@ public class MapUpdaterLocal {
         
     	return mOut;
     }
-   
-    public float [] getCloestPoint() {
+
+    public float [] getClosestPoint(float [] points) {
+        int i, j;
+        double disMin = 1000000;
+        float [] thePoint = null;
+
+        if (null == points) {
+            return null;
+        }
+
+        int len = points.length;
+
+        for (i = 0; i < len; i+=2) {
+            float [] p = new float[2];
+            p[0] = points[i+0];
+            p[1] = points[i+1];
+            double dis = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
+            if (dis < disMin) {
+                thePoint = p;
+                disMin = dis;
+            }
+        }
+
+        if (null == thePoint) {
+            return null;
+        }
+
+        double degree = Math.atan2(thePoint[1], thePoint[0]) * 180 / Math.PI;
+        if (degree < 0) {
+            degree += 180;
+        }
+
+        float [] xytheta = new float [3];
+        xytheta[0] = thePoint[0];
+        xytheta[1] = thePoint[1];
+        xytheta[2] = (float) degree;
+        return xytheta;
+    }
+
+    public float [] getClosestPoint() {
     	int i, j;
     	double disMin = 1000000;
     	float [] thePoint = null;
