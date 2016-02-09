@@ -18,10 +18,10 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import java.awt.image.BufferedImage;
+// import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO;
+// import javax.imageio.ImageIO;
 
 public class Utils {
 	// LOG.setLevel(Level.WARNING), LOG.severe/warning/info/finest
@@ -59,7 +59,7 @@ public class Utils {
     }
     
     public byte[][] getMapImage(String mapName) {
-    	BufferedImage img = null;
+    	/*BufferedImage img = null;
     	
     	File file = new File(topPath, mDir);
         file = new File(file, mapName);
@@ -95,7 +95,8 @@ public class Utils {
             }
         }
         
-        return buffer;
+        return buffer;*/
+        return null;
     }
     
     public float [] getTransform() {

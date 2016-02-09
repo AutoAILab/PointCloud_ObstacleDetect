@@ -9,7 +9,7 @@ public class ObstacleAvoidance {
     private int       mDataAllLen = 0;
     private int []    mDataPointsInt = null;
     private int []    mObstacleBoxesInt = null;
-    private boolean   isGlobalLocalized = true;
+    private boolean   isGlobalLocalized = false;
     private float []  mDataPointsLocal = null;
     private float []  mObstacleBoxesLocal = null;
     private float []  mObstacleBoxesLocalVertical = null;

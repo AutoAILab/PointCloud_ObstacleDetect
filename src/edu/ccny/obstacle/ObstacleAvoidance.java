@@ -9,7 +9,7 @@ public class ObstacleAvoidance {
     private int       mDataAllLen = 0;
     private int []    mDataPointsInt = null;
     private int []    mObstacleBoxesInt = null;
-    private boolean   isGlobalLocalized = true;
+    private boolean   isGlobalLocalized = false;
     private float []  mDataPointsLocal = null;
     private float []  mObstacleBoxesLocal = null;
     private float []  mObstacleBoxesLocalVertical = null;
@@ -75,14 +75,16 @@ public class ObstacleAvoidance {
                 LOG.warning("ObstacleAvoidance() invalid range, use default");
             }
         }
-    	
-    	// final String topPath = Environment.getExternalStorageDirectory();
-		final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
+
+        // pointCloud3D_20160202_2007_data_moving2person
+        // pointCloud3D_20160202_2009_data_moving2person_slow
+        // pointCloud3D_20160202_2010_data_movingBoth
+		/*final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
 		final String mDir = "obstacleTango";
-		// pointCloud3D_20160202_2007_data_moving2person
-		// pointCloud3D_20160202_2009_data_moving2person_slow
-		// pointCloud3D_20160202_2010_data_movingBoth
-		final String mPointCloudDir = "pointCloud3D_20160202_2007_data_moving2person";
+		final String mPointCloudDir = "pointCloud3D_20160202_2007_data_moving2person";*/
+        final String topPath = "/sdcard/";
+        final String mDir = "DCIM/";
+        final String mPointCloudDir = "pointCloud3D";
 	    mUtils = new Utils(topPath, mDir, mPointCloudDir);
 	    
         init(map, transform, obstacleWall, localGranularityMeter);
@@ -270,7 +272,7 @@ public class ObstacleAvoidance {
         return mObstacleBoxesLocal;
     }
     
-    public boolean detecting(int id) {
+    public boolean detecting() { // int id
         String info;
 
         if (false == obstacleDetectFlag) {
@@ -294,12 +296,12 @@ public class ObstacleAvoidance {
         mObstaclePoint = null;
         long startTime = System.currentTimeMillis();
 
-        /*mFramesCnt += 1;
+        mFramesCnt += 1;
         if (mFramesCnt == 1) {
             mUtils.removeFramesData();
         }
-        mUtils.saveArray2File(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_raw.txt"); */
-        mFramesCnt = id;
+        mUtils.saveArray2File(mPointCloudBuffer, String.valueOf(mFramesCnt) + "_raw.txt");
+        // mFramesCnt = id;
 
         float [] eulerAngle = MyQuaternion.getEulerAngle(mQuaternion);
         // When the device vertical, roll is 90 degree
@@ -312,6 +314,7 @@ public class ObstacleAvoidance {
         
         mUtils.saveStr2File(String.valueOf(eulerAngle[0]), String.valueOf(mFramesCnt) + "_rollRaw.txt");
         mUtils.saveStr2File(String.valueOf(angleDegree), String.valueOf(mFramesCnt) + "_roll.txt");
+        mUtils.saveStr2File(String.valueOf(mTimeStamp), String.valueOf(mFramesCnt) + "_timestamp.txt");
 
         // The device might has pitch angle
         double [][] rotaMatrixPitch = MyQuaternion.getRotationMatrixByPitch(eulerAngle[1]);

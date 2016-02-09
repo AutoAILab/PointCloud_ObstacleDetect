@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 public class MapUpdaterLocal {
     // TODO: figure out the best threshold
-    private final byte mThresholdCnt = 6;
+    private final byte mThresholdCnt = 4;
 
     private static final int X = 0;
     private static final int Y = 1;
