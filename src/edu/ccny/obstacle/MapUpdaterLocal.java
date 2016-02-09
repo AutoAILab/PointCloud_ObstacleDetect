@@ -1,5 +1,6 @@
 package edu.ccny.obstacle;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -183,7 +184,38 @@ public class MapUpdaterLocal {
     	
     	return obstacleFront;
     }
-    
+
+    public float [] getObstaclePointsPolarFilter(float [] points) {
+        ArrayList<Float> pointsList = new ArrayList<Float>();
+
+        int len = points.length;
+        if (0 == len || 0 != len % 2) {
+            return null;
+        }
+
+        for (int i = 0; i < len; i+=2) {
+            float p0 = points[i + 0];
+            float p1 = points[i + 1];
+
+            double degree = Math.atan2(p1, p0) * 180 / Math.PI;
+            if (degree < 0) {
+                degree += 180;
+            }
+            if (degree >= 70 && degree <= 130) {
+                pointsList.add(p0);
+                pointsList.add(p1);
+            }
+        }
+
+        len = pointsList.size();
+        float [] pointsFilter = new float[len];
+        for (int i = 0; i < len; i++) {
+            pointsFilter[i] = pointsList.get(i);
+        }
+
+        return pointsFilter;
+    }
+
     public float [] getObstaclePoints() {
         int cnt = 0;
         int dim = 2;
@@ -312,8 +344,46 @@ public class MapUpdaterLocal {
         
     	return mOut;
     }
-   
-    public float [] getCloestPoint() {
+
+    public float [] getClosestPoint(float [] points) {
+        int i, j;
+        double disMin = 1000000;
+        float [] thePoint = null;
+
+        if (null == points) {
+            return null;
+        }
+
+        int len = points.length;
+
+        for (i = 0; i < len; i+=2) {
+            float [] p = new float[2];
+            p[0] = points[i+0];
+            p[1] = points[i+1];
+            double dis = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
+            if (dis < disMin) {
+                thePoint = p;
+                disMin = dis;
+            }
+        }
+
+        if (null == thePoint) {
+            return null;
+        }
+
+        double degree = Math.atan2(thePoint[1], thePoint[0]) * 180 / Math.PI;
+        if (degree < 0) {
+            degree += 180;
+        }
+
+        float [] xytheta = new float [3];
+        xytheta[0] = thePoint[0];
+        xytheta[1] = thePoint[1];
+        xytheta[2] = (float) degree;
+        return xytheta;
+    }
+
+    public float [] getClosestPoint() {
     	int i, j;
     	double disMin = 1000000;
     	float [] thePoint = null;

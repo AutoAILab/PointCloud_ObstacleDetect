@@ -243,7 +243,10 @@ public class ObstacleAvoidance {
         }
     }
     
-    public float [] getObstacleCloestPoint () {
+    public float [] getObstacleClosestPoint () {
+        if (null != mObstaclePoint) {
+            return mObstaclePoint.clone();
+        }
     	return mObstaclePoint;
     }
     
@@ -288,15 +291,15 @@ public class ObstacleAvoidance {
         boolean findObstacle = false;
         mDataPointsLocal = null;
         mObstacleBoxesInt = null;
+        mObstaclePoint = null;
         long startTime = System.currentTimeMillis();
 
         /*mFramesCnt += 1;
         if (mFramesCnt == 1) {
             mUtils.removeFramesData();
-        }*/
+        }
+        mUtils.saveArray2File(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_raw.txt"); */
         mFramesCnt = id;
-        
-        // mUtils.saveArray2File(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_raw.txt");
 
         float [] eulerAngle = MyQuaternion.getEulerAngle(mQuaternion);
         // When the device vertical, roll is 90 degree
@@ -306,6 +309,7 @@ public class ObstacleAvoidance {
         // vise versa for looks up.
         double angleDegree = eulerAngle[0] - 90 + 14.5;
         double [][] rotaMatrixRoll = MyQuaternion.getRotationMatrixByRoll(angleDegree);
+        
         mUtils.saveStr2File(String.valueOf(eulerAngle[0]), String.valueOf(mFramesCnt) + "_rollRaw.txt");
         mUtils.saveStr2File(String.valueOf(angleDegree), String.valueOf(mFramesCnt) + "_roll.txt");
 
@@ -318,7 +322,6 @@ public class ObstacleAvoidance {
         mDataAllLen = mPointCloudProcess.rotationRollPitchCorrect(mDataAll, mPointCloudBuffer,
                 rotaMatrixRoll, rotaMatrixPitch);
         if (0 == mDataAllLen) {
-        	mObstaclePoint = null;
             return false;
         }
         
@@ -335,39 +338,31 @@ public class ObstacleAvoidance {
         mDataAllLen = mPointCloudProcess.downsampleByRange(
                 mDataAll, mDataAllLen, xMin, xMax, zMin, zMax, yMin, yMax);
         if (0 == mDataAllLen) {
-        	mObstaclePoint = null;
         	return false;
         }
 
-        mUtils.saveArray2File(mDataAll, mDataAllLen,
-        		3, String.valueOf(mFramesCnt) + "_range.txt");
+        mUtils.saveArray2File(mDataAll, mDataAllLen, 3, String.valueOf(mFramesCnt) + "_range.txt");
 
         // Projection to z, project to floor plane
         // use the Array with len, so don't need to re-allocate the array
         mMapLocal.updating(mDataAll, mDataAllLen);
         // each point: x, y, z (height)
         float [] obstaclePoints = mMapLocal.getObstaclePoints();
+        if (null == obstaclePoints) {
+            return false;
+        }
         int dataPointsLen = obstaclePoints.length;
-        
-        float [] obstaclePolarHis = mMapLocal.getObstaclePolarHis();
-
         // local obstacle points process
         mDataPointsLocal = new float[dataPointsLen];
         System.arraycopy(obstaclePoints, 0, mDataPointsLocal, 0, dataPointsLen);
         mObstacleBoxesLocal = mMapLocal.getObstacleBoxes();
-
+        
+        float [] obstaclePolarHis = mMapLocal.getObstaclePolarHis();
         mUtils.saveArray2File(obstaclePoints, obstaclePoints.length,
-        		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
+        		2, String.valueOf(mFramesCnt) + "_prjZPts.txt");
         mUtils.saveArray2File(mObstacleBoxesLocal, mObstacleBoxesLocal.length,
-        		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");
+        		2, String.valueOf(mFramesCnt) + "_prjZBox.txt");
         mUtils.saveArray2File(obstaclePolarHis, String.valueOf(mFramesCnt) + "_prjZHis.txt");
-        
-        float [] obs = mMapLocal.getCloestPoint();
-        
-        if (null != obs) {
-	        mUtils.saveArray2File(obs, obs.length,
-	        		3, String.valueOf(mFramesCnt) + "_obs.txt");
-        }
         
         // Projection to y, like: get in front vertical plane
         mMapLocalVertical.updating(mDataAll, mDataAllLen);
@@ -377,27 +372,33 @@ public class ObstacleAvoidance {
         mObstacleBoxesLocalVertical = mMapLocalVertical.getObstacleBoxes();
         
         float [] obstaclePolarHisVertical = mMapLocalVertical.getObstaclePolarHis();
-
-        mUtils.saveArray2File(pV, pV.length, 2, String.valueOf(mFramesCnt) + "_prjY.txt");
+        mUtils.saveArray2File(pV, pV.length, 2, String.valueOf(mFramesCnt) + "_prjYPts.txt");
         mUtils.saveArray2File(mObstacleBoxesLocalVertical, mObstacleBoxesLocalVertical.length,
-        		2, String.valueOf(mFramesCnt) + "_prjYObj.txt");
+        		2, String.valueOf(mFramesCnt) + "_prjYBox.txt");
         mUtils.saveArray2File(obstaclePolarHisVertical, String.valueOf(mFramesCnt) + "_prjYHis.txt");
-        
-        float [] obsY = mMapLocalVertical.getPointByXExtra(obs[0]);
-        if (null != obsY) {
-	        mUtils.saveArray2File(obsY, obsY.length,
-	        		2, String.valueOf(mFramesCnt) + "_obsY.txt");
-        }
-        mObstaclePoint = new float[4];
-        mObstaclePoint [0] = obs[0];  // x
-        mObstaclePoint [1] = obs[1];  // y
-        if (null != obsY) {		      // z: height
-        	mObstaclePoint [2] = obsY[1]; 
-        } else {
-        	mObstaclePoint [2] = -2f;
-        }
-        mObstaclePoint [3] = obs[2];  // angle (left -> right: 0 -> 180)
 
+        // Get closest obstacle point (x, y, z, theta)
+        float [] obstaclePointsFilter = mMapLocal.getObstaclePointsPolarFilter(obstaclePoints);
+        if (null != obstaclePointsFilter) {
+            float[] obsZ = mMapLocal.getClosestPoint(obstaclePointsFilter);
+            if (null != obsZ) {
+                float[] obsY = mMapLocalVertical.getPointByXExtra(obsZ[0]);
+                if (null != obsZ && obsY != null) {
+                	mUtils.saveArray2File(obsZ, String.valueOf(mFramesCnt) + "_prjZObs.txt");
+                	mUtils.saveArray2File(obsY, String.valueOf(mFramesCnt) + "_prjYObs.txt");
+                    mObstaclePoint = new float[4];
+                    mObstaclePoint[0] = obsZ[0];  // x
+                    mObstaclePoint[1] = obsZ[1];  // y
+                    if (null != obsY) {              // z: height
+                        mObstaclePoint[2] = obsY[1];
+                    } else {
+                        mObstaclePoint[2] = -2f;
+                    }
+                    mObstaclePoint[3] = obsZ[2];  // angle (left -> right: 0 -> 180)
+                }
+            }
+        }
+        
         int obstacleBoxNum = 0;
         if (false == isGlobalLocalized) {
             // get region boxes (2 corner points) of these points in local 2d metric
@@ -422,12 +423,7 @@ public class ObstacleAvoidance {
             // global metric -> global byte grid
             obstaclePoints = globalMetric2Pixel(obstaclePoints, dataPointsLen);
             mDataPointsInt = mMapGlobal.getObstaclePoints(obstaclePoints, dataPointsLen);
-            
-            /*mUtils.saveArray2File(obstaclePoints, obstaclePoints.length,
-            		2, String.valueOf(mFramesCnt) + "_prjZ.txt");
-            mUtils.saveArray2File(mObstacleBoxesInt, mObstacleBoxesInt.length,
-            		2, String.valueOf(mFramesCnt) + "_prjZObj.txt");*/
-            
+
             if (null != mDataPointsInt) {
                 if (mDataPointsInt.length > mPointsMinimum) {
                     findObstacle = true;
