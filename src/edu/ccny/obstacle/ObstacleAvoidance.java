@@ -79,12 +79,12 @@ public class ObstacleAvoidance {
         // pointCloud3D_20160202_2007_data_moving2person
         // pointCloud3D_20160202_2009_data_moving2person_slow
         // pointCloud3D_20160202_2010_data_movingBoth
-		/*final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
+		final String topPath = "C:/Users/df/Documents/code/bing/indoormapseditor/";
 		final String mDir = "obstacleTango";
-		final String mPointCloudDir = "pointCloud3D_20160202_2007_data_moving2person";*/
-        final String topPath = "/sdcard/";
+		final String mPointCloudDir = "pointCloud3D_20160202_2007_data_moving2person";
+        /*final String topPath = "/sdcard/";
         final String mDir = "DCIM/";
-        final String mPointCloudDir = "pointCloud3D";
+        final String mPointCloudDir = "pointCloud3D";*/
 	    mUtils = new Utils(topPath, mDir, mPointCloudDir);
 	    
         init(map, transform, obstacleWall, localGranularityMeter);
@@ -272,7 +272,7 @@ public class ObstacleAvoidance {
         return mObstacleBoxesLocal;
     }
     
-    public boolean detecting() { // int id
+    public boolean detecting(int id) {
         String info;
 
         if (false == obstacleDetectFlag) {
@@ -354,6 +354,8 @@ public class ObstacleAvoidance {
         if (null == obstaclePoints) {
             return false;
         }
+        obstaclePoints = mMapLocal.getObstaclePointsPolarFilter(obstaclePoints);
+        
         int dataPointsLen = obstaclePoints.length;
         // local obstacle points process
         mDataPointsLocal = new float[dataPointsLen];
@@ -381,7 +383,8 @@ public class ObstacleAvoidance {
         mUtils.saveArray2File(obstaclePolarHisVertical, String.valueOf(mFramesCnt) + "_prjYHis.txt");
 
         // Get closest obstacle point (x, y, z, theta)
-        float [] obstaclePointsFilter = mMapLocal.getObstaclePointsPolarFilter(obstaclePoints);
+        // float [] obstaclePointsFilter = mMapLocal.getObstaclePointsPolarFilter(obstaclePoints);
+        float [] obstaclePointsFilter = obstaclePoints;
         if (null != obstaclePointsFilter) {
             float[] obsZ = mMapLocal.getClosestPoint(obstaclePointsFilter);
             if (null != obsZ) {

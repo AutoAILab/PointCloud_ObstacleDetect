@@ -201,7 +201,7 @@ public class MapUpdaterLocal {
             if (degree < 0) {
                 degree += 180;
             }
-            if (degree >= 70 && degree <= 130) {
+            if (degree >= 80 && degree <= 100) {
                 pointsList.add(p0);
                 pointsList.add(p1);
             }

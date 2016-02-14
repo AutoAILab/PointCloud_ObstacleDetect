@@ -11,6 +11,10 @@ import edu.ccny.obstacle.*;
 
 public class MainTest {
 
+	/* Modifying:
+	public ObstacleAvoidance(), Constructor
+	*/
+	
 	public MainTest() { /* TODO Auto-generated constructor stub */ }
 
 	public static void main(String[] args) { // TODO Auto-generated method stub	
@@ -50,7 +54,6 @@ public class MainTest {
 			
 		    mObstacleAvoidances.updatingData(buf, t.clone(), q.clone(), timeStamp);
 		    mObstacleAvoidances.setIsGlobalLocalized(true);
-		    mObstacleAvoidances.detecting(id);
 		    
 		    int [] mObstaclePoints = null;
 		    int [] mObstacleBoxesInt = null;
